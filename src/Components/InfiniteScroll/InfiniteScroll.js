@@ -7,9 +7,14 @@ function InfiniteScroll () {
     const [dataImg, setDataImg] = useState([[],[],[]])
     const [pageIndex, setPageIndex] = useState(1)
     const [searchState, setSearchState] = useState('random')
+    const [firstCall, setFirstCall] = useState(true)
 
     const handleSearch = (e) => {
         e.preventDefault()
+
+        setSearchState(inpRef.current.value)
+        setPageIndex(1)
+
     }
 
     const infiniteFetchData = () => {
@@ -36,9 +41,42 @@ function InfiniteScroll () {
                 }
 
                 setDataImg(newState)
-
+                setFirstCall(false)
         })
     }
+
+    const searchFetchData = () => {
+        fetch(`https://api.unsplash.com/search/photos?page=${pageIndex}&per_page=30&query=${searchState}&client_id=pOf0-VIT5UtbJytFS2YKgW126aWK4nzTtoynhF_EBlk`)
+            .then((response) => {
+                return response.json()
+            })
+            .then((data) => {
+                const imgsReceived = [];
+                data.results.forEach((img) => {
+                    imgsReceived.push(img.urls.regular)
+                })
+                const newState = [
+                    [],
+                    [],
+                    [],
+                ]
+                let index = 0
+                for(let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 10 ; j++) {
+                        newState[i].push(imgsReceived[index])
+                        index += 1
+                    }
+                }
+
+                setDataImg(newState)
+
+            })
+    }
+
+    useEffect(() => {
+        if(firstCall) return
+        searchFetchData()
+    },[searchState])
 
     useEffect(() => {
         infiniteFetchData()
@@ -64,7 +102,7 @@ function InfiniteScroll () {
         <div className='container'>
             <form onSubmit={handleSearch}>
                 <label htmlFor="search">Votre recherche</label>
-                <input type="text" id="search" ref={inpRef} />
+                <input type="text" id="search" ref={inpRef} placeholder='faites votre recherche en écrivant ce que vous recherchez en anglais' />
             </form>
             <div className="card-list">
                 <div>
